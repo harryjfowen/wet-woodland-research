@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🌳 Setting up WWR (Wet Woodland Research) conda environment..."
+echo "🌳 Setting up TOW (Trees Outside Woodland) conda environment..."
 
 # Check if conda is available
 if ! command -v conda &> /dev/null; then
@@ -17,7 +17,7 @@ if [ $? -eq 0 ]; then
     echo "✅ Environment created successfully!"
     echo ""
     echo "🚀 To activate the environment, run:"
-    echo "   conda activate wwr"
+    echo "   conda activate tow"
     echo ""
     echo "📋 To verify installation, run:"
     echo "   python -c \"import geopandas, rasterio, shapely; print('All packages installed successfully!')\""

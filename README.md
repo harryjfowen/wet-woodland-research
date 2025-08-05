@@ -1,12 +1,25 @@
-# Wet Woodlands Research - Code Repository
+# Trees Outside Woodland (TOW) - Wet Woodland Component
 
-![Wet Woodlands Research Network Logo](wwr/images/wwrn_logo.jpeg)
+![Wet Woodlands Research Network Logo](tow/images/wwrn_logo.jpeg)
+
 
 ## About the Project
 
-**Wet Woodlands Research** is a network of scientists and stakeholders interested in wet woodlands and their potential contribution for nature-based solutions for climate change. The aim of the network is to improve understanding of these unique ecosystems for policy and practice.
+This repository contains the **Wet Woodland Component** of the DEFRA-funded research project **"Applications of the TOW map: Assessing national carbon stocks, biodiversity benefits, and priority habitat creation of non-woodland trees"**.
 
-This code repository contains the computational tools and scripts developed to support the research objectives of the Wet Woodlands Research Network.
+**Wet Woodlands Research** is a network of scientists and stakeholders interested in wet woodlands and their potential contribution for nature-based solutions for climate change.
+
+### Work Package 6 (WP6): Peat-Forming Wet Woodland Expansion
+
+This component focuses on identifying current and future opportunities for peat-forming wet woodland expansion. Using advanced geospatial methods, we map wet woodland patches in the Trees Outside Woodland (TOW) dataset, model potential expansion zones, and validate predictions through field surveys.
+
+Our work focuses on:
+- **Identification**: Locating existing wet woodland areas within the TOW dataset
+- **Restoration Potential**: Identifying areas suitable for wet woodland restoration  
+- **Carbon Potential**: Assessing future carbon sequestration opportunities
+- **Policy Support**: Providing evidence-based tools for climate change mitigation
+
+This work directly feeds into nature-based solutions policy, informing Net-Zero and Biodiversity Net Gain strategies.
 
 ## Project Overview
 
@@ -21,12 +34,14 @@ This repository provides tools for processing and analyzing large-scale geospati
 
 ```
 wet-woodland-research/
-├── wwr/                          # Main project directory
+├── tow/                          # TOW Wet Woodland Component
 │   ├── src/                      # Source code
 │   │   ├── map_v1_vector.py      # Vector-based species filtering & intersection
 │   │   ├── gdb_processor.py      # Large GDB processing & intersection
 │   │   └── utils/                # Utility functions
-│   └── README.md                 # This file
+│   ├── images/                   # Project images and logos
+│   ├── meta/                     # Project documentation
+│   └── environment.yml           # Conda environment specification
 ├── data/                         # Data directory (not tracked in git)
 ├── results/                      # Output directory (not tracked in git)
 └── README.md                     # This file
@@ -43,14 +58,20 @@ wet-woodland-research/
 
 1. **Create Conda Environment**:
    ```bash
-   conda create -n wwr python=3.11
-   conda activate wwr
+   conda create -n tow python=3.11
+   conda activate tow
    ```
 
 2. **Install Required Packages**:
    ```bash
    conda install -c conda-forge geopandas shapely fiona pyogrio rtree pandas tqdm
    pip install rasterio
+   ```
+
+   **Alternative**: Use the provided environment file:
+   ```bash
+   conda env create -f tow/environment.yml
+   conda activate tow
    ```
 
 ### Data Requirements
@@ -71,16 +92,16 @@ Process Forestry England subcompartments to identify wet woodland species and in
 
 ```bash
 # Basic usage
-python wwr/src/map_v1_vector.py --data-dir data
+python tow/src/map_v1_vector.py --data-dir data
 
 # With custom output
-python wwr/src/map_v1_vector.py --data-dir data --output results/wet_woodland_intersection
+python tow/src/map_v1_vector.py --data-dir data --output results/wet_woodland_intersection
 
 # With polygon consolidation
-python wwr/src/map_v1_vector.py --data-dir data --consolidate
+python tow/src/map_v1_vector.py --data-dir data --consolidate
 
 # Consolidate by specific attribute
-python wwr/src/map_v1_vector.py --data-dir data --consolidate --consolidate-by SPECIES
+python tow/src/map_v1_vector.py --data-dir data --consolidate --consolidate-by SPECIES
 ```
 
 **Features**:
@@ -96,13 +117,13 @@ Process large Tree of Woodland (TOW) GDB files with peat extent intersection:
 
 ```bash
 # Fast identification of intersecting features
-python wwr/src/gdb_processor.py --gdb-dir data/FR_TOW_V1/ --peatland-file data/peaty_soil_extent_v1.shp --method identify
+python tow/src/gdb_processor.py --gdb-dir data/FR_TOW_V1/ --peatland-file data/peaty_soil_extent_v1.shp --method identify
 
 # Exact intersection geometries (clipped shapes)
-python wwr/src/gdb_processor.py --gdb-dir data/FR_TOW_V1/ --peatland-file data/peaty_soil_extent_v1.shp --method intersect
+python tow/src/gdb_processor.py --gdb-dir data/FR_TOW_V1/ --peatland-file data/peaty_soil_extent_v1.shp --method intersect
 
 # With custom output and parallel processing
-python wwr/src/gdb_processor.py --gdb-dir data/FR_TOW_V1/ --peatland-file data/peaty_soil_extent_v1.shp --method intersect --output results/tow_peat_intersection --processes 16
+python tow/src/gdb_processor.py --gdb-dir data/FR_TOW_V1/ --peatland-file data/peaty_soil_extent_v1.shp --method intersect --output results/tow_peat_intersection --processes 16
 ```
 
 **Features**:
@@ -150,7 +171,7 @@ The scripts are configured to identify and filter for key wet woodland species:
 
 ## Contributing
 
-This code is part of the Wet Woodlands Research Network. For contributions or questions:
+This code is part of the DEFRA Trees Outside Woodland (TOW) project, specifically the Wet Woodland Component. For contributions or questions:
 
 1. Ensure code follows the existing style and structure
 2. Add appropriate documentation for new features
@@ -163,11 +184,12 @@ This code is developed as part of the Wet Woodlands Research Network for scienti
 
 ## Acknowledgments
 
-- **Wet Woodlands Research Network**: For project coordination and scientific direction
+- **DEFRA**: For funding and coordinating the Trees Outside Woodland (TOW) project
+- **Wet Woodlands Research Network**: For scientific expertise and stakeholder engagement in the wet woodland component
 - **Forestry England**: For providing woodland management data
 - **UK Peatland Data**: For peat extent datasets
 - **Open Source GIS Community**: For the tools and libraries that make this work possible
 
 ---
 
-*This repository supports research into wet woodlands as nature-based solutions for climate change mitigation and adaptation.* 
+*This repository supports the DEFRA Trees Outside Woodland project and the Wet Woodlands Research Network, focusing on wet woodland identification, restoration potential, and carbon sequestration opportunities as nature-based solutions for climate change mitigation and adaptation.* 

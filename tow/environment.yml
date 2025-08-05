@@ -1,4 +1,4 @@
-name: wwr
+name: tow
 channels:
   - conda-forge
   - defaults
