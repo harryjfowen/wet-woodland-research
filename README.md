@@ -7,7 +7,7 @@
 
 This repository contains the **Wet Woodland Component** of the DEFRA-funded research project **"Applications of the TOW map: Assessing national carbon stocks, biodiversity benefits, and priority habitat creation of non-woodland trees"**.
 
-**Wet Woodlands Research** is a network of scientists and stakeholders interested in wet woodlands and their potential contribution for nature-based solutions for climate change.
+**Wet Woodlands Research** is a network of scientists and stakeholders interested in wet woodlands and their potential contribution for nature-based solutions for climate change (https://www.wetwoodlands.com/).
 
 ### Work Package 6 (WP6): Peat-Forming Wet Woodland Expansion
 
@@ -189,7 +189,3 @@ This code is developed as part of the Wet Woodlands Research Network for scienti
 - **Forestry England**: For providing woodland management data
 - **UK Peatland Data**: For peat extent datasets
 - **Open Source GIS Community**: For the tools and libraries that make this work possible
-
----
-
-*This repository supports the DEFRA Trees Outside Woodland project and the Wet Woodlands Research Network, focusing on wet woodland identification, restoration potential, and carbon sequestration opportunities as nature-based solutions for climate change mitigation and adaptation.* 
