@@ -1,6 +1,6 @@
 # Wet Woodlands Research - Code Repository
 
-![Wet Woodlands Research Network Logo](wwrn_logo.jpeg)
+![Wet Woodlands Research Network Logo](wwr/images/wwrn_logo.jpeg)
 
 ## About the Project
 
