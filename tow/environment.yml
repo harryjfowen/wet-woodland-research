@@ -1,56 +1,76 @@
-name: tow
+name: wwr
 channels:
+  - pytorch
+  - nvidia
   - conda-forge
   - defaults
+
 dependencies:
-  # Core Python
-  - python=3.11
+  # Python
+  - python=3.10
   
-  # GIS and Spatial Data Processing
-  - geopandas>=0.14.0
-  - fiona>=1.9.0
-  - shapely>=2.0.0
-  - pyproj>=3.6.0
-  - rasterio>=1.3.0
-  - pyogrio>=0.6.0
+  # PyTorch with CUDA support
+  - pytorch=2.1.0
+  - torchvision=0.16.0
+  - torchaudio=2.1.0
+  - pytorch-cuda=12.1
   
-  # Data Processing and Analysis
-  - pandas>=2.0.0
-  - numpy>=1.24.0
-  - scipy>=1.11.0
+  # Core ML libraries
+  - segmentation-models-pytorch
+  - albumentations
+  - scikit-learn
+  - scikit-image
+  - tqdm
   
-  # Distributed Computing
-  - dask>=2023.0.0
-  - dask-geopandas>=0.3.0
+  # Geospatial libraries
+  - geopandas
+  - rasterio
+  - fiona
+  - shapely
+  - pyproj
+  - pyogrio
+  - gdal
+  
+  # Data processing
+  - numpy
+  - pandas
+  - xarray
+  - netcdf4
   
   # Visualization
-  - matplotlib>=3.7.0
-  - seaborn>=0.12.0
-  - folium>=0.14.0
+  - matplotlib
+  - seaborn
+  - folium
+  - ipyleaflet
   
-  # Jupyter and Development
-  - jupyter>=1.0.0
-  - ipykernel>=6.25.0
-  - ipywidgets>=8.0.0
-  
-  # Additional GIS Tools
-  - rtree>=1.0.0
-  - cartopy>=0.22.0
-  - earthpy>=0.9.0
+  # Jupyter and development
+  - jupyter
+  - jupyterlab
+  - ipykernel
+  - ipywidgets
   
   # Utilities
-  - tqdm>=4.65.0
-  - requests>=2.31.0
-  - pyyaml>=6.0
+  - tqdm
+  - requests
+  - pillow
+  - h5py
+  - zarr
   
-  # Optional: GPU acceleration (uncomment if you have CUDA)
-  # - cudf
-  # - cuspatial
+  # Optional but useful
+  - earthpy
+  - rioxarray
+  - contextily
   
   # Development tools
-  - pip>=23.0.0
+  - black
+  - flake8
+  - pytest
+  - pip
+
+  # Pip packages (for packages not available in conda)
   - pip:
-    # Additional packages that might not be in conda
-    - contextily>=1.4.0  # For web map tiles
-    - geopy>=2.3.0       # For geocoding
-    - sentinelsat>=1.2.0 # For satellite data 
+    - timm  # For additional encoder backbones
+    - tensorboard  # For training monitoring
+    - wandb  # For experiment tracking (optional)
+    - earth-engine-api  # For Google Earth Engine
+    - earthengine-api  # Alternative EE package 

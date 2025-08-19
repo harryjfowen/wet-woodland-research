@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 """
 Highly Optimized Peat Dissolver
-===============================
 
-This script efficiently dissolves peat extent polygons into a single unified boundary.
-Optimized for speed and memory efficiency.
-
-Usage:
-    python dissolve_peat.py <input_peat.shp> <output_mask.shp> [options]
+DESCRIPTION: Optimized utility for processing peat extent shapefiles. Combines multiple peat polygons into 
+a unified boundary, handles geometry validation, and supports simplification. Used to create clean peatland 
+masks for spatial analysis and machine learning training data preparation.
 """
 
 import geopandas as gpd

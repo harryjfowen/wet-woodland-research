@@ -1,3 +1,12 @@
+#!/usr/bin/env python3
+"""
+Compartments Processor for Wet Woodland Species Filtering
+
+DESCRIPTION: Processes Forestry England compartment data to filter for wet woodland species (alder, birch, willow). 
+Checks primary, secondary, and tertiary species columns, handles various data formats, and creates filtered 
+shapefiles for further processing. Used in the data pipeline to identify potential wet woodland areas.
+"""
+
 import geopandas as gpd
 import rasterio
 from rasterio.mask import mask
