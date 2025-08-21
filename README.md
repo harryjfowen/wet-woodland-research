@@ -16,6 +16,7 @@ wet-woodland-research/
 │   │   ├── ee_inference.js       # Earth Engine inference data extraction
 │   │   ├── lightgbm_trainer.py   # LightGBM model training
 │   │   ├── lightgbm_predictor.py # LightGBM model inference
+│   │   ├── classify_polygons_from_tiles.py # Polygon classification from prediction tiles
 │   │   ├── tidy_ee_tiles_dask.py # Tile preprocessing with Dask
 │   │   ├── create_*.py           # Data preparation scripts
 │   │   └── tow_gdb_processor.py  # Forestry England data processing
@@ -69,6 +70,23 @@ python tow/src/lightgbm_predictor.py \
   --output predictions.tif
 ```
 
+### 6. Polygon Classification (Optional)
+```bash
+# Classify polygons using prediction tiles
+python tow/src/classify_polygons_from_tiles.py \
+  --polygons data/forestry_compartments.shp \
+  --tile-dir data/predictions \
+  --output data/classified_compartments.shp \
+  --threshold 0.5
+
+# Only output wet woodland polygons
+python tow/src/classify_polygons_from_tiles.py \
+  --polygons data/forestry_compartments.shp \
+  --tile-dir data/predictions \
+  --output data/wet_woodland_only.shp \
+  --only-wet-woodland
+```
+
 ## Key Features
 
 - **64-dimensional temporal embeddings** from Google Earth Engine
@@ -89,6 +107,7 @@ python tow/src/lightgbm_predictor.py \
 ### Machine Learning
 - `lightgbm_trainer.py`: Train LightGBM models with comprehensive evaluation
 - `lightgbm_predictor.py`: Apply trained models for inference
+- `classify_polygons_from_tiles.py`: Classify polygons using prediction tiles with parallel processing
 - `tidy_ee_tiles_dask.py`: Preprocess Earth Engine tiles efficiently
 
 ### Earth Engine

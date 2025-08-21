@@ -1,181 +1,264 @@
 #!/usr/bin/env python3
 """
-LightGBM Predictor for Wet Woodland Detection
+Fast Parallel LightGBM Prediction - Memory Efficient
 
-DESCRIPTION: Inference script for trained LightGBM models. Takes feature tiles (64 embeddings + 3 LiDAR bands) 
-and predicts wet woodland probability for each pixel. Outputs binary classification maps (0/1/255) 
-with configurable thresholds for precision vs recall trade-offs.
+Uses the same approach as lightgbm_trainer.py but with memory optimization:
+1. Load data from tiles in parallel (multiprocessing for I/O)
+2. Use LightGBM's built-in parallelization for prediction (n_jobs=-1)
+3. Process tiles immediately as they're loaded to prevent memory buildup
+4. Clear memory after each tile
 """
 
 import numpy as np
-import pandas as pd
-import lightgbm as lgb
 import rasterio
+from rasterio.merge import merge
 from pathlib import Path
 import argparse
+import multiprocessing as mp
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
+import lightgbm as lgb
+import glob
 import gc
 
 
-class WetWoodlandPredictor:
-    def __init__(self, model_path):
-        """Initialize predictor with trained model."""
-        self.model = lgb.Booster(model_file=model_path)
-        # Get feature names from the model
-        self.feature_names = self.model.feature_name()
-        print(f"📊 Loaded model with {len(self.feature_names)} features")
-        
-        # Default threshold (can be adjusted)
-        self.threshold = 0.690  # F1-optimized threshold from training
-        
-        print(f"✅ Loaded model from {model_path}")
-        print(f"📊 Model has {len(self.feature_names)} features")
-        print(f"🎯 Using threshold: {self.threshold}")
+def load_and_predict_single_tile_worker(args):
+    """Worker function to load data and predict for a single tile - memory efficient."""
+    model_path, data_file, output_file, threshold = args
     
-    def predict_tile(self, data_file, output_file=None, threshold=None):
-        """Predict wet woodland probability for a single tile."""
-        if threshold is None:
-            threshold = self.threshold
-            
-        print(f"🔍 Processing {Path(data_file).name}...")
+    try:
+        # Load model in each worker
+        model = lgb.Booster(model_file=model_path)
         
-        try:
-            with rasterio.open(data_file) as src:
-                # Read data (67 bands: 64 embeddings + 3 LiDAR)
-                data = src.read()  # (67, H, W)
-                
-                if data.shape[0] != 67:
-                    print(f"❌ Expected 67 bands, got {data.shape[0]}")
-                    return None
-                
-                # Reshape for prediction: (H*W, 67)
-                original_shape = data.shape[1:]
-                data_flat = data.reshape(67, -1).T  # (n_pixels, 67)
-                
-                # Find valid pixels (no NaN)
-                valid_mask = ~np.isnan(data_flat).any(axis=1)
-                valid_pixels = data_flat[valid_mask]
-                
-                if len(valid_pixels) == 0:
-                    print("❌ No valid pixels found")
-                    return None
-                
-                print(f"📊 Predicting for {len(valid_pixels):,} valid pixels...")
-                
-                # Predict probabilities
-                probabilities = self.model.predict(valid_pixels)
-                
-                # Convert to binary predictions
-                predictions = (probabilities > threshold).astype(np.uint8)
-                
-                # Create output array
-                output = np.full(original_shape, 255, dtype=np.uint8)  # 255 = no data
-                output_flat = output.flatten()
-                output_flat[valid_mask] = predictions
-                output = output_flat.reshape(original_shape)
-                
-                # Save output
-                if output_file:
-                    self._save_prediction(output, src, output_file)
-                    print(f"✅ Saved prediction to {output_file}")
-                
-                # Calculate statistics
-                n_wet_woodland = predictions.sum()
-                n_total = len(valid_pixels)
-                percentage = (n_wet_woodland / n_total * 100) if n_total > 0 else 0
-                
-                print(f"📈 Results: {n_wet_woodland:,} wet woodland pixels ({percentage:.2f}%)")
-                
-                return {
-                    'probabilities': probabilities,
-                    'predictions': predictions,
-                    'n_wet_woodland': n_wet_woodland,
-                    'n_total': n_total,
-                    'percentage': percentage
-                }
-                
-        except Exception as e:
-            print(f"❌ Error processing {data_file}: {e}")
+        with rasterio.open(data_file) as src:
+            # Read all bands (same as trainer)
+            data = src.read()  # Shape: (bands, height, width)
+            
+            if data.shape[0] != 67:
+                return None
+            
+            # Find valid pixels (same logic as trainer)
+            data_valid = ~np.isnan(data).any(axis=0)
+            
+            if data_valid.sum() == 0:
+                return None
+            
+            # Extract valid pixels (same as trainer) - this reduces memory usage significantly
+            features = data[:, data_valid].T  # Shape: (n_pixels, n_bands)
+            
+            # Clear the full data array to save memory
+            del data
+            
+            # Predict immediately
+            predictions_proba = model.predict(features)
+            binary_predictions = (predictions_proba > threshold).astype(np.uint8)
+            
+            # Create output arrays
+            binary_output = np.full((src.height, src.width), 255, dtype=np.uint8)
+            prob_output = np.full((src.height, src.width), np.nan, dtype=np.float32)
+            
+            binary_output[data_valid] = binary_predictions
+            prob_output[data_valid] = predictions_proba
+            
+            # Save 2-band output
+            with rasterio.open(
+                output_file,
+                'w',
+                driver='GTiff',
+                height=src.height,
+                width=src.width,
+                count=2,
+                dtype='float32',
+                crs=src.crs,
+                transform=src.transform,
+                nodata=255
+            ) as dst:
+                dst.write(binary_output.astype(np.float32), 1)
+                dst.write(prob_output, 2)
+                dst.set_band_description(1, "Binary Classification (0=No Wet Woodland, 1=Wet Woodland)")
+                dst.set_band_description(2, "Probability (0.0-1.0)")
+            
+            # Calculate statistics
+            n_wet_woodland = binary_predictions.sum()
+            n_total = len(features)
+            percentage = (n_wet_woodland / n_total * 100) if n_total > 0 else 0
+            
+            # Clear memory
+            del features, predictions_proba, binary_predictions, binary_output, prob_output
+            
+            return {
+                'file': Path(data_file).name,
+                'n_wet_woodland': n_wet_woodland,
+                'n_total': n_total,
+                'percentage': percentage,
+                'output_file': output_file
+            }
+            
+    except Exception as e:
+        return None
+
+
+def find_tiles(data_dir):
+    """Find all GeoTIFF files in directory."""
+    data_files = glob.glob(str(Path(data_dir) / "*.tif"))
+    return data_files
+
+
+def predict_directory_parallel(model_path, data_dir, output_dir, threshold=0.550, n_workers=None, create_mosaic=False):
+    """Predict for all tiles using parallel processing with immediate memory clearing."""
+    print("🚀 Fast Parallel LightGBM Prediction (Memory Optimized)")
+    print("=" * 50)
+    
+    data_dir = Path(data_dir)
+    output_dir = Path(output_dir)
+    output_dir.mkdir(exist_ok=True)
+    
+    print(f"✅ Using model: {model_path}")
+    print(f"🎯 Using threshold: {threshold}")
+    
+    # Find all tiles
+    data_files = find_tiles(data_dir)
+    if not data_files:
+        print(f"❌ No TIFF files found in {data_dir}")
+        return []
+    
+    print(f"🔍 Found {len(data_files)} tiles to process")
+    
+    # Auto-detect number of workers (unless specified)
+    if n_workers is None:
+        # Use fewer workers to avoid memory issues
+        n_workers = min(mp.cpu_count() // 2, len(data_files), 16)
+        # Ensure at least 1 worker
+        n_workers = max(1, n_workers)
+    print(f"🔧 Using {n_workers} workers (memory optimized)")
+    
+    # Prepare arguments for parallel processing
+    process_args = [(model_path, f, str(output_dir / f"prediction_{Path(f).name}"), threshold) 
+                   for f in data_files]
+    
+    # Process tiles in parallel with immediate memory clearing
+    results = []
+    total_wet_woodland = 0
+    total_pixels = 0
+    
+    print("🚀 Processing tiles in parallel...")
+    
+    with ProcessPoolExecutor(max_workers=n_workers) as executor:
+        # Submit all tasks
+        future_to_file = {executor.submit(load_and_predict_single_tile_worker, args): args[1] 
+                         for args in process_args}
+        
+        # Collect results as they complete
+        for future in tqdm(as_completed(future_to_file), total=len(data_files), desc="Processing"):
+            data_file = future_to_file[future]
+            try:
+                result = future.result()
+                if result:
+                    results.append(result)
+                    total_wet_woodland += result['n_wet_woodland']
+                    total_pixels += result['n_total']
+                    # Don't print during processing to avoid interrupting progress bar
+                # Don't print failures to avoid interrupting progress bar
+            except Exception as e:
+                # Only print critical errors
+                pass
+    
+    # Summary
+    if results:
+        avg_percentage = (total_wet_woodland / total_pixels * 100) if total_pixels > 0 else 0
+        
+        print(f"\n📊 Summary:")
+        print(f"   Successful tiles: {len(results)}/{len(data_files)}")
+        print(f"   Total wet woodland pixels: {total_wet_woodland:,}")
+        print(f"   Total valid pixels: {total_pixels:,}")
+        print(f"   Average wet woodland percentage: {avg_percentage:.2f}%")
+    
+    # Create mosaic if requested
+    if create_mosaic and results:
+        print(f"\n🧩 Creating mosaic from {len(results)} tiles...")
+        mosaic_file = create_mosaic_from_results(results, output_dir)
+        if mosaic_file:
+            print(f"✅ Mosaic created: {mosaic_file}")
+    
+    return results
+
+
+def create_mosaic_from_results(results, output_dir):
+    """Create a mosaic from all prediction tiles."""
+    try:
+        # Get all output files
+        raster_files = [result['output_file'] for result in results if result['output_file']]
+        
+        if not raster_files:
             return None
-    
-    def _save_prediction(self, prediction, src, output_file):
-        """Save prediction as GeoTIFF."""
-        with rasterio.open(
-            output_file,
-            'w',
-            driver='GTiff',
-            height=prediction.shape[0],
-            width=prediction.shape[1],
-            count=1,
-            dtype=prediction.dtype,
-            crs=src.crs,
-            transform=src.transform,
-            nodata=255
-        ) as dst:
-            dst.write(prediction, 1)
-    
-    def predict_directory(self, data_dir, output_dir, threshold=None):
-        """Predict for all tiles in a directory."""
-        data_dir = Path(data_dir)
-        output_dir = Path(output_dir)
-        output_dir.mkdir(exist_ok=True)
         
-        # Find all feature tiles
-        data_files = list(data_dir.glob("*.tif"))
-        print(f"🔍 Found {len(data_files)} tiles to process")
+        # Read all rasters and keep them open
+        raster_list = []
+        open_files = []
+        for raster_file in raster_files:
+            src = rasterio.open(raster_file)
+            raster_list.append(src)
+            open_files.append(src)
         
-        results = []
+        # Merge rasters
+        mosaic, out_transform = merge(raster_list)
         
-        for data_file in tqdm(data_files, desc="Predicting tiles"):
-            output_file = output_dir / f"prediction_{data_file.name}"
-            
-            result = self.predict_tile(str(data_file), str(output_file), threshold)
-            if result:
-                results.append({
-                    'file': data_file.name,
-                    'n_wet_woodland': result['n_wet_woodland'],
-                    'n_total': result['n_total'],
-                    'percentage': result['percentage']
-                })
+        # Get metadata from first file (while it's still open)
+        out_meta = open_files[0].meta.copy()
         
-        # Summary
-        if results:
-            total_wet_woodland = sum(r['n_wet_woodland'] for r in results)
-            total_pixels = sum(r['n_total'] for r in results)
-            avg_percentage = (total_wet_woodland / total_pixels * 100) if total_pixels > 0 else 0
-            
-            print(f"\n📊 Summary:")
-            print(f"   Total tiles processed: {len(results)}")
-            print(f"   Total wet woodland pixels: {total_wet_woodland:,}")
-            print(f"   Total valid pixels: {total_pixels:,}")
-            print(f"   Average wet woodland percentage: {avg_percentage:.2f}%")
+        # Close all files
+        for src in open_files:
+            src.close()
         
-        return results
+        # Update metadata for mosaic
+        out_meta.update({
+            "driver": "GTiff",
+            "height": mosaic.shape[1],
+            "width": mosaic.shape[2],
+            "transform": out_transform,
+            "count": 2,
+            "dtype": "float32"
+        })
+        
+        # Save mosaic
+        mosaic_file = output_dir / "prediction_mosaic.tif"
+        with rasterio.open(mosaic_file, "w", **out_meta) as dest:
+            dest.write(mosaic)
+            dest.set_band_description(1, "Binary Classification (0=No Wet Woodland, 1=Wet Woodland)")
+            dest.set_band_description(2, "Probability (0.0-1.0)")
+        
+        return str(mosaic_file)
+        
+    except Exception as e:
+        print(f"❌ Error creating mosaic: {e}")
+        return None
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Wet Woodland Prediction")
+    parser = argparse.ArgumentParser(description="Fast Parallel LightGBM Prediction")
     parser.add_argument("--model", required=True, help="Path to trained LightGBM model")
-    parser.add_argument("--data", required=True, help="Input data file or directory")
-    parser.add_argument("--output", required=True, help="Output file or directory")
-    parser.add_argument("--threshold", type=float, default=0.690, help="Prediction threshold")
+    parser.add_argument("--data", required=True, help="Directory containing GeoTIFF files")
+    parser.add_argument("--output", required=True, help="Output directory for predictions")
+    parser.add_argument("--threshold", type=float, default=0.550, help="Classification threshold")
+    parser.add_argument("--workers", type=int, help="Number of parallel workers for data loading")
+    parser.add_argument("--create-mosaic", action="store_true", help="Create mosaic from all tiles")
     
     args = parser.parse_args()
     
-    # Initialize predictor
-    predictor = WetWoodlandPredictor(args.model)
+    # Run prediction
+    results = predict_directory_parallel(
+        model_path=args.model,
+        data_dir=args.data,
+        output_dir=args.output,
+        threshold=args.threshold,
+        n_workers=args.workers,
+        create_mosaic=args.create_mosaic
+    )
     
-    # Check if input is file or directory
-    data_path = Path(args.data)
-    
-    if data_path.is_file():
-        # Single file prediction
-        predictor.predict_tile(args.data, args.output, args.threshold)
-    elif data_path.is_dir():
-        # Directory prediction
-        predictor.predict_directory(args.data, args.output, args.threshold)
+    if results:
+        print(f"\n✅ Prediction complete! Results saved to {args.output}")
     else:
-        print(f"❌ Input path not found: {args.data}")
+        print(f"\n❌ No predictions generated")
 
 
 if __name__ == "__main__":
