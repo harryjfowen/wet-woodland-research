@@ -283,3 +283,7 @@ output/
 *.qgz~*
 *.gpkg-wal
 *.gpkg-shm 
+
+# Viewer
+viewer/node_modules/
+viewer/dist/
