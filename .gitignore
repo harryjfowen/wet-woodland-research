@@ -14,6 +14,60 @@ wwr/data/
 *.zip
 *.tar.gz
 *.rar
+*.pdf
+
+# GIS vector formats
+*.sbn
+*.sbx
+*.qix
+*.qpj
+*.aih
+*.ain
+*.atx
+*.ixs
+*.mxs
+*.gml
+*.kml
+*.kmz
+*.geojson
+*.topojson
+*.fgb
+*.mif
+*.mid
+*.tab
+*.id
+*.map
+*.dat
+*.osm
+*.pbf
+
+# GIS raster formats and sidecars
+*.vrt
+*.ovr
+*.aux
+*.aux.xml
+*.tfw
+*.jgw
+*.pgw
+*.img
+*.jp2
+*.j2k
+*.sid
+*.ecw
+*.asc
+*.bil
+*.hdr
+*.hgt
+*.grd
+*.sdat
+*.adf
+
+# Point cloud and 3D survey data
+*.las
+*.laz
+*.copc.laz
+*.e57
+*.ply
 
 # Python
 __pycache__/
@@ -202,6 +256,10 @@ $RECYCLE.BIN/
 *.swp
 *.swo
 *~
+
+# Local tooling and session files
+.Rhistory
+.claude/
 
 # Logs
 *.log

@@ -1,0 +1,8 @@
+# Datashader raster maps from predictions/suitability TIFs
+datashader>=0.15.0
+xarray>=2023.0.0
+rasterio>=1.3.0
+colorcet>=3.0.0
+Pillow>=10.0.0
+numpy>=1.24.0
+earthpy>=0.9.0

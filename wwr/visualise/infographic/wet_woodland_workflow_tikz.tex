@@ -1,0 +1,141 @@
+\begin{figure*}[t]
+\centering
+
+% Requires in preamble:
+% \usepackage{tikz}
+% \usetikzlibrary{arrows.meta,positioning,fit,calc,backgrounds}
+
+\definecolor{ink}{HTML}{37474F}
+\definecolor{frame}{HTML}{8A9DB0}
+\definecolor{panelblue}{HTML}{F5F9FD}
+\definecolor{panelwarm}{HTML}{FBF7EE}
+\definecolor{googleblue}{HTML}{E8F0FE}
+\definecolor{powderblue}{HTML}{D2E3FC}
+\definecolor{mint}{HTML}{CFE8E1}
+\definecolor{softgreen}{HTML}{E0EEDC}
+\definecolor{sand}{HTML}{F7E8CF}
+
+\begin{tikzpicture}[
+  font=\sffamily\small,
+  >=Latex,
+  node distance=7mm and 9mm,
+  io_current/.style={
+    draw=frame,
+    text=ink,
+    rounded corners=3pt,
+    minimum width=31mm,
+    minimum height=9mm,
+    align=center,
+    fill=googleblue,
+    line width=0.6pt
+  },
+  io_suit/.style={
+    draw=frame,
+    text=ink,
+    rounded corners=3pt,
+    minimum width=31mm,
+    minimum height=9mm,
+    align=center,
+    fill=sand,
+    line width=0.6pt
+  },
+  process_current/.style={
+    draw=ink,
+    text=ink,
+    rounded corners=3pt,
+    minimum width=34mm,
+    minimum height=10mm,
+    align=center,
+    fill=powderblue,
+    line width=0.8pt
+  },
+  process_suit/.style={
+    draw=frame,
+    text=ink,
+    rounded corners=3pt,
+    minimum width=34mm,
+    minimum height=10mm,
+    align=center,
+    fill=mint,
+    line width=0.8pt
+  },
+  output/.style={
+    draw=frame,
+    text=ink,
+    rounded corners=3pt,
+    minimum width=32mm,
+    minimum height=9mm,
+    align=center,
+    fill=softgreen,
+    line width=0.7pt
+  },
+  group_current/.style={
+    draw=frame,
+    fill=panelblue,
+    rounded corners=6pt,
+    inner sep=7pt,
+    line width=0.8pt
+  },
+  group_suit/.style={
+    draw=frame,
+    fill=panelwarm,
+    rounded corners=6pt,
+    inner sep=7pt,
+    line width=0.8pt
+  },
+  title/.style={
+    text=ink,
+    font=\sffamily\bfseries\normalsize,
+    fill=white,
+    inner xsep=2mm,
+    inner ysep=1mm
+  },
+  arrow/.style={
+    -{Latex[length=2.2mm,width=1.7mm]},
+    draw=ink,
+    line width=0.9pt,
+    rounded corners=2pt
+  }
+]
+
+% Row 1: current extent
+\node[io_current] (emb) {Remote-sensing\\embeddings};
+\node[io_current, right=of emb] (terrain) {Terrain covariates\\elevation, slope};
+\node[process_current, below=11mm of $(emb)!0.5!(terrain)$] (xgb) {XGBoost\\classification};
+\node[output, right=14mm of xgb] (extent) {Current wet woodland\\extent};
+
+\draw[arrow] (emb.south) |- ([xshift=-6mm]xgb.north);
+\draw[arrow] (terrain.south) |- ([xshift=6mm]xgb.north);
+\draw[arrow] (xgb) -- (extent);
+
+% Row 2: suitability
+\node[io_suit, below=22mm of xgb] (dtm) {LiDAR-derived terrain\\and wetness metrics};
+\node[io_suit, right=of dtm] (smuk) {SMUK soil moisture\\mean and variability};
+\node[io_suit, right=of smuk] (hydro) {Peat depth and\\distance to water};
+\node[process_suit, below=12mm of smuk] (maxent) {MaxEnt / Elapid\\modelling};
+\node[output, right=14mm of maxent] (suit) {Wet woodland\\restoration suitability};
+
+\draw[arrow] (dtm.south) |- ([xshift=-8mm]maxent.north);
+\draw[arrow] (smuk.south) -- ([yshift=2.5mm]smuk.south) |- (maxent.north);
+\draw[arrow] (hydro.south) |- ([xshift=8mm]maxent.north);
+\draw[arrow] (maxent) -- (suit);
+
+\begin{pgfonlayer}{background}
+\node[group_current, fit=(emb)(terrain)(xgb)(extent)] (panel_extent) {};
+\node[group_suit, fit=(dtm)(smuk)(hydro)(maxent)(suit)] (panel_suit) {};
+\end{pgfonlayer}
+
+\node[title, above=3mm of panel_extent.north] {Current extent mapping};
+\node[title, above=3mm of panel_suit.north] {Suitability modelling};
+
+\end{tikzpicture}
+
+\caption{
+Workflow used to map current extent and restoration suitability of wet woodland in
+England. Current extent was estimated using remote-sensing embeddings and terrain
+covariates in an XGBoost classifier. Restoration suitability was estimated using
+LiDAR-derived terrain and wetness metrics, SMUK soil-moisture summaries, peat
+depth, and distance to water in a MaxEnt/Elapid framework.
+}
+\label{fig:workflow}
+\end{figure*}

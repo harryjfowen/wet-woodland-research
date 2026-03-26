@@ -1,139 +1,138 @@
-# Wet Woodland Research - Machine Learning Pipeline
+<!--
+Optional banner placement:
 
-![Wet Woodlands Research Network Logo](tow/images/wwrn_logo.jpeg)
+<p align="center">
+  <img src="wwr/assets/images/banner.png" alt="Wet Woodland Research banner" width="100%" />
+</p>
+-->
 
-## Overview
+# Wet Woodland Research
 
-This repository contains a complete machine learning pipeline for wet woodland detection using Google Earth Engine embeddings and LiDAR data. The project focuses on identifying wet woodland areas within the new DEFRA Trees Outsie Woodland map using advanced geospatial analysis and LightGBM classification.
+Wet Woodland Research (WWR) is the active codebase for mapping wet woodland-associated
+tree cover and wet woodland restoration opportunity. The current workflow focuses on
+England and combines label preparation, Google Earth Engine features, GPU XGBoost
+modelling, Elapid/MaxEnt suitability modelling, post-processing, validation, and
+publication-oriented visualisation.
 
-## Project Structure
+## What This Repository Contains
 
-```
+- A 10 m current extent workflow for likely wet woodland-associated tree cover within the
+  wider tree-cover domain.
+- A national environmental suitability workflow for wet woodland establishment and
+  restoration opportunity.
+- Post-processing, evaluation, reporting, and figure-generation scripts for analysis and
+  communication.
+- Archived legacy code kept separately from the active pipeline.
+
+## Repository Layout
+
+```text
 wet-woodland-research/
-├── tow/                          # Main project directory
-│   ├── src/                      # Source code
-│   │   ├── ee_train.js           # Earth Engine training data extraction
-│   │   ├── ee_inference.js       # Earth Engine inference data extraction
-│   │   ├── lightgbm_trainer.py   # LightGBM model training
-│   │   ├── lightgbm_predictor.py # LightGBM model inference
-│   │   ├── classify_polygons_from_tiles.py # Polygon classification from prediction tiles
-│   │   ├── tidy_ee_tiles_dask.py # Tile preprocessing with Dask
-│   │   ├── create_*.py           # Data preparation scripts
-│   │   └── tow_gdb_processor.py  # Forestry England data processing
-│   ├── models/                   # Trained models
-│   ├── cache/                    # Processed data cache
-│   └── environment.yml           # Conda environment
-├── data/                         # Data directory (not tracked)
-└── README.md                     # This file
+├── README.md
+└── wwr/
+    ├── code/        # Active pipeline scripts
+    ├── data/        # Local inputs, outputs, and validation assets
+    ├── docs/        # Runbooks, methods notes, and planning docs
+    ├── visualise/   # Publication-style map rendering scripts
+    ├── assets/      # Logos and other lightweight assets
+    └── archive/     # Legacy code retained outside the active workflow
 ```
 
-## Quick Start
+## Active Pipeline
 
-### 1. Environment Setup
-```bash
-conda env create -f tow/environment.yml
-conda activate wwr
-```
+The canonical workflow lives under `wwr/code/`:
 
-### 2. Data Preparation
-```bash
-# Process Forestry England data
-python tow/src/tow_gdb_processor.py --gdb-dir data/forestry/ --peatland-file data/peat.shp
+1. `labels/`
+   Build masks and training labels from the TOW GDB and supporting habitat inputs.
+2. `preprocess/`
+   Build terrain and abiotic predictor layers for modelling.
+3. `model/`
+   Train the GPU XGBoost current extent model.
+4. `inference/`
+   Apply trained models across embedding tiles.
+5. `postprocess/`
+   Mosaic, threshold, validate, and summarize outputs.
+6. `potential/`
+   Run wet woodland suitability modelling with `maxent.py` as the preferred entrypoint.
+7. `visualise/`
+   Produce publication-ready national and thematic figures.
 
-# Create training labels
-python tow/src/create_species_mask_raster.py data/forestry_filtered.shp data/labels.tif
+Key production scripts include:
 
-# Create peat binary mask
-python tow/src/create_peat_binary_mask_raster.py data/peat_prob.tif data/peat_binary.tif
-```
+- `wwr/code/labels/tow_gdb_processor.py`
+- `wwr/code/labels/gather_wetwoodland_labels.py`
+- `wwr/code/preprocess/build_dtm_metrics.py`
+- `wwr/code/preprocess/build_abiotic_stack.py`
+- `wwr/code/model/gpu_xgboost_trainer.py`
+- `wwr/code/inference/gpu_xgboost_predictor.py`
+- `wwr/code/potential/maxent.py`
+- `wwr/code/postprocess/hysteresis_threshold.py`
+- `wwr/code/postprocess/wet_woodland_stats.py`
+- `wwr/code/postprocess/recall_from_kml.py`
 
-### 3. Earth Engine Data Extraction
-```javascript
-// In Google Earth Engine Code Editor:
-// Load and run ee_train.js for training data
-// Load and run ee_inference.js for inference data
-```
+## Getting Started
 
-### 4. Model Training
-```bash
-python tow/src/lightgbm_trainer.py \
-  --data-dir data/features \
-  --labels-file data/labels.tif \
-  --save-model models/wet_woodland_model.txt
-```
+1. Work from the repository root:
 
-### 5. Model Inference
-```bash
-python tow/src/lightgbm_predictor.py \
-  --model models/wet_woodland_model.txt \
-  --data data/inference_features.tif \
-  --output predictions.tif
-```
+   ```bash
+   cd /path/to/wet-woodland-research
+   ```
 
-### 6. Polygon Classification (Optional)
-```bash
-# Classify polygons using prediction tiles
-python tow/src/classify_polygons_from_tiles.py \
-  --polygons data/forestry_compartments.shp \
-  --tile-dir data/predictions \
-  --output data/classified_compartments.shp \
-  --threshold 0.5
+2. Prepare a Python environment with the GIS and modelling stack used by the scripts.
+   In practice this includes packages such as `rasterio`, `geopandas`, `fiona`,
+   `xgboost`, `optuna`, `scikit-learn`, and `elapid`. GPU training and inference also
+   require a compatible CUDA-enabled environment.
 
-# Only output wet woodland polygons
-python tow/src/classify_polygons_from_tiles.py \
-  --polygons data/forestry_compartments.shp \
-  --tile-dir data/predictions \
-  --output data/wet_woodland_only.shp \
-  --only-wet-woodland
-```
+3. Populate local inputs under `wwr/data/input/` and `wwr/data/raw/`.
+   Large geospatial inputs and generated outputs are intentionally not tracked in git.
 
-## Key Features
+4. Inspect stage-specific CLIs before running the workflow:
 
-- **64-dimensional temporal embeddings** from Google Earth Engine
-- **LiDAR features** (CHM, DTM, DSM) from Environment Agency
-- **Mature woodland filtering** (CHM ≥ 3m)
-- **Class imbalance handling** with optimized LightGBM parameters
-- **Caching system** for efficient data processing
-- **Flexible feature handling** (embeddings only, LiDAR only, or combined)
+   ```bash
+   python wwr/code/labels/tow_gdb_processor.py --help
+   python wwr/code/model/gpu_xgboost_trainer.py --help
+   python wwr/code/potential/maxent.py --help
+   python wwr/code/postprocess/wet_woodland_stats.py --help
+   ```
 
-## Script Descriptions
+5. Install the extra figure-rendering dependencies only if you need the visualisation
+   scripts:
 
-### Data Processing
-- `tow_gdb_processor.py`: Process Forestry England geodatabases
-- `create_species_mask_raster.py`: Create binary species masks
-- `create_peat_binary_mask_raster.py`: Convert peat probability to binary
-- `dissolve_peat_vector.py`: Combine peat polygons into single boundary
+   ```bash
+   pip install -r wwr/visualise/requirements.txt
+   ```
 
-### Machine Learning
-- `lightgbm_trainer.py`: Train LightGBM models with comprehensive evaluation
-- `lightgbm_predictor.py`: Apply trained models for inference
-- `classify_polygons_from_tiles.py`: Classify polygons using prediction tiles with parallel processing
-- `tidy_ee_tiles_dask.py`: Preprocess Earth Engine tiles efficiently
+## Data and Outputs
 
-### Earth Engine
-- `ee_train.js`: Extract training data (species labels + mature woodland)
-- `ee_inference.js`: Extract inference data (peat areas + mature woodland)
+The active data tree is rooted at `wwr/data/`.
 
-## Performance
+- Inputs live under `wwr/data/input/`
+- Raw upstream assets live under `wwr/data/raw/`
+- Validation assets live under `wwr/data/validation/`
+- Generated outputs are typically written under `wwr/data/output/`
 
-- **Training**: ~1M+ pixels processed with caching
-- **Inference**: Handles large raster tiles efficiently
-- **Memory**: Optimized for large-scale geospatial data
-- **Accuracy**: F1 score ~0.91, Balanced Accuracy ~0.9465
+Common output folders include:
 
-## Target Species
+- `wwr/data/output/labels`
+- `wwr/data/output/models`
+- `wwr/data/output/predictions`
+- `wwr/data/output/preprocess`
+- `wwr/data/output/potential`
+- `wwr/data/output/postprocess`
+- `wwr/data/output/reports`
 
-- **Alder** (*Alnus* spp.)
-- **Birch** (*Betula* spp.) 
-- **Willow** (*Salix* spp.)
+## Documentation
 
-## License
+- [Workflow runbook](wwr/docs/RUNBOOK.md)
+- [Data layout](wwr/data/README.md)
+- [Code index](wwr/code/README.md)
+- [Visualisation guide](wwr/visualise/README.md)
+- [Wet woodland suitability framework](wwr/docs/methods/WET_WOODLAND_SUITABILITY_FRAMEWORK.md)
 
-Part of the DEFRA Trees Outside Woodland (TOW) project and Wet Woodlands Research Network.
+## Project Conventions
 
-## Acknowledgments
-
-- **DEFRA**: Project funding and coordination
-- **Wet Woodlands Research Network**: Scientific expertise
-- **Forestry England**: Woodland management data
-- **Google Earth Engine**: Temporal embeddings and processing platform
+- Active code should remain under `wwr/code/`.
+- Legacy or superseded code should be moved to `wwr/archive/legacy_code/`, not deleted.
+- Keep large inputs, rasters, and generated outputs out of version control.
+- Treat the top-level README as the GitHub landing page and keep detailed operational
+  commands in the linked docs.
