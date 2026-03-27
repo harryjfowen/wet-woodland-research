@@ -38,6 +38,21 @@ wet-woodland-research/
     └── archive/     # Legacy code retained outside the active workflow
 ```
 
+## Web Viewer
+
+An interactive national map is published at [harryjfowen.github.io/wetwoodland-map](https://harryjfowen.github.io/wetwoodland-map), built on deck.gl and geotiff.js. It visualises the current extent probability surface and restoration suitability across England.
+
+### Cloud-Optimised GeoTIFF architecture
+
+The probability raster is served as a Cloud-Optimised GeoTIFF (COG) from Cloudflare R2 object storage. This is the industry-standard approach used by USGS, ESA, and NASA for distributing large raster datasets — known as cloud-native geospatial.
+
+**How it works:**
+- The COG stores the raster in 512×512 pixel tiles with a pre-computed overview pyramid (7 levels: 2×–128×). At national scale the browser fetches the 128× overview; zooming into a county fetches full-resolution tiles.
+- Cloudflare R2 supports HTTP `Range` requests, so geotiff.js reads the COG's internal index (a few KB), locates the precise byte offsets of the needed tiles, and fetches only those bytes. A single viewport may transfer 50 KB from a 700 MB file.
+- Overviews use RMS resampling rather than the default average. For sparse data like wet woodland extent (< 1% of England), RMS preserves the density signal — dense patches appear stronger, sparse patches faint — rather than washing everything to near-zero or near-uniform.
+- Pixels are quantized to uint8 (0 = zero probability/transparent, 1–254 = probability × 254, 255 = nodata) with DEFLATE compression. The sparse zero-heavy raster compresses to a fraction of its uncompressed size.
+- The viewer source lives at [github.com/harryjfowen/wetwoodland-map](https://github.com/harryjfowen/wetwoodland-map).
+
 ## Active Pipeline
 
 The canonical workflow lives under `wwr/code/`:
