@@ -287,3 +287,4 @@ output/
 # Viewer
 viewer/node_modules/
 viewer/dist/
+viewer/
