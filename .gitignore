@@ -288,3 +288,4 @@ output/
 viewer/node_modules/
 viewer/dist/
 viewer/
+*.zip
