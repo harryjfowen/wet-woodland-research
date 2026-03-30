@@ -2,7 +2,9 @@
   <img src="outputs/images/github_banner.png" alt="Wet woodland extent probability and habitat suitability across England" width="100%" />
 </p>
 <p align="center">
-  <a href="https://harryjfowen.github.io/wetwoodland-map/">View live interactive map of outputs</a>
+  <a href="https://harryjfowen.github.io/wetwoodland-map/">
+    <img src="https://img.shields.io/badge/Live%20Map-View%20Interactive%20Outputs-0096C7?style=for-the-badge&logo=googlemaps&logoColor=white" alt="Live interactive map" />
+  </a>
 </p>
 
 # Wet Woodland Research
