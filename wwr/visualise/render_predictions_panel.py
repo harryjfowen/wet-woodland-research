@@ -135,6 +135,22 @@ def build_predictions_colormap(palette_name):
                 ["#FFFFFF", "#D7EDDB", "#7EC8C9", "#2E88BD", "#081D58"],
                 N=256,
             )
+    elif palette_name == "forest_teal":
+        # Matches the PLASMA_LUT used in the deck.gl web viewer and GitHub banner:
+        # pale sage-green → teal → deep navy
+        cmap = mcolors.LinearSegmentedColormap.from_list(
+            "forest_teal",
+            [
+                (0.00, "#ECF5E8"),
+                (0.08, "#ECF5E8"),
+                (0.22, "#CCE3CD"),
+                (0.40, "#96C7BA"),
+                (0.58, "#5CA0A8"),
+                (0.78, "#2E708D"),
+                (1.00, "#092345"),
+            ],
+            N=256,
+        )
     else:
         cmap = plt.get_cmap("cividis").copy()
 
@@ -666,7 +682,7 @@ def main():
     )
     parser.add_argument(
         "--palette",
-        choices=["editorial", "viridis", "viridis_r", "cividis", "cividis_r", "turbo"],
+        choices=["editorial", "viridis", "viridis_r", "cividis", "cividis_r", "turbo", "forest_teal"],
         default="viridis_r",
         help="Predictions palette. Default: viridis_r.",
     )
