@@ -60,3 +60,9 @@ Large inputs and generated outputs are not tracked in git. Populate `wwr/data/in
 - [Suitability framework](wwr/docs/methods/WET_WOODLAND_SUITABILITY_FRAMEWORK.md)
 - [Code index](wwr/code/README.md)
 - [Data layout](wwr/data/README.md)
+
+## Output Data
+
+The model outputs are archived and openly available on Zenodo:
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19218648.svg)](https://doi.org/10.5281/zenodo.19218648)
