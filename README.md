@@ -7,7 +7,7 @@
   </a>
 </p>
 
-# Wet Woodland Research
+# Mapping the current and potential extent of wet woodland in England to support conservation and restoration
 
 Active codebase for mapping wet woodland extent and restoration suitability across England. Combines label preparation, Google Earth Engine feature extraction, GPU XGBoost modelling, MaxEnt suitability modelling, post-processing, and visualisation.
 
