@@ -290,6 +290,7 @@ def draw_probability_inset(
     basemap_max_px,
     basemap_contrast,
     locator_anchor="right",
+    cmap=None,
 ):
     inset_data, _, inset_bounds = load_inset_raster(
         pred_path,
@@ -335,7 +336,7 @@ def draw_probability_inset(
                 extent=inset_extent,
             )
 
-    inset_cmap = plt.get_cmap("plasma").copy()
+    inset_cmap = (cmap if cmap is not None else plt.get_cmap("plasma")).copy()
     inset_cmap.set_bad((1.0, 1.0, 1.0, 0.0))
     inset_rgba = inset_cmap(
         mcolors.Normalize(vmin=0.0, vmax=1.0, clip=True)(inset_vals)
@@ -847,8 +848,8 @@ def main():
     parser.add_argument(
         "--inset-basemap",
         choices=["none", "cartodb_positron", "cartodb_voyager", "cartodb_dark_matter", "osm_mapnik"],
-        default="none",
-        help="Optional basemap underlay for the site inset. Default: none.",
+        default="cartodb_positron",
+        help="Optional basemap underlay for the site inset. Default: cartodb_positron.",
     )
     parser.add_argument(
         "--inset-basemap-alpha",
@@ -1222,6 +1223,7 @@ def main():
             basemap_max_px=args.inset_basemap_max_px,
             basemap_contrast=args.inset_basemap_contrast,
             locator_anchor="right",
+            cmap=cmap,
         )
     if include_left_inset:
         inset_left = max(0.015, map_pos.x0 - inset_size + 0.08)
@@ -1251,6 +1253,7 @@ def main():
             basemap_max_px=args.inset_basemap_max_px,
             basemap_contrast=args.inset_basemap_contrast,
             locator_anchor="left",
+            cmap=cmap,
         )
     if include_bottom_right_inset:
         inset_left = min(0.985 - inset_size, map_pos.x1 + 0.045)
@@ -1280,6 +1283,7 @@ def main():
             basemap_max_px=args.inset_basemap_max_px,
             basemap_contrast=args.inset_basemap_contrast,
             locator_anchor="right",
+            cmap=cmap,
         )
 
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=color_norm)
