@@ -289,3 +289,6 @@ viewer/node_modules/
 viewer/dist/
 viewer/
 *.zip
+
+# Track repo assets in visualise/output
+!wwr/visualise/output/github_banner.png

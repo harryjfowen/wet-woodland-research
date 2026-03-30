@@ -34,7 +34,7 @@ REPO    = os.path.dirname(WWR)
 EXTENT_TIF  = os.path.join(WWR, 'data/output/postprocess/wet_woodland_extent.tif')
 SUIT_TIF    = os.path.join(WWR, 'data/output/potential/maxent/wet_woodland_potential.tif')
 ENGLAND_SHP = os.path.join(WWR, 'data/input/boundaries/england.shp')
-OUT_DIR     = os.path.join(REPO, 'outputs', 'images')
+OUT_DIR     = os.path.join(WWR, 'visualise', 'output')
 OUT_FILE    = os.path.join(OUT_DIR, 'github_banner.png')
 
 os.makedirs(OUT_DIR, exist_ok=True)

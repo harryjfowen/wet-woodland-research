@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="outputs/images/github_banner.png" alt="Wet woodland extent probability and habitat suitability across England" width="100%" />
+  <img src="wwr/visualise/output/github_banner.png" alt="Wet woodland extent probability and habitat suitability across England" width="100%" />
 </p>
 <p align="center">
   <a href="https://harryjfowen.github.io/wetwoodland-map/">
