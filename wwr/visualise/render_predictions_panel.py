@@ -597,8 +597,8 @@ def main():
     )
     parser.add_argument(
         "--predictions",
-        default="data/output/postprocess/wet_woodland_mosaic_hysteresis.tif",
-        help="Hysteresis GeoTIFF. Default: data/output/postprocess/wet_woodland_mosaic_hysteresis.tif",
+        default="data/output/rasters/wet_woodland_extent.tif",
+        help="Hysteresis GeoTIFF. Default: data/output/rasters/wet_woodland_extent.tif",
     )
     parser.add_argument(
         "--predictions-band",
