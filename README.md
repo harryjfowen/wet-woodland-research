@@ -11,7 +11,7 @@
 
 Active codebase for mapping wet woodland extent and restoration suitability across England. Combines label preparation, Google Earth Engine feature extraction, GPU XGBoost modelling, MaxEnt suitability modelling, post-processing, and visualisation.
 
-Technical lead and developed by Harry Owen (Research Associate, [Royal Holloway, University of London](https://www.royalholloway.ac.uk/)), alongside Associate Professor [Alice Milner](https://www.royalholloway.ac.uk/research-and-teaching/departments-and-schools/geography/our-people/academic-staff/dr-alice-milner/) (Royal Holloway) and Associate Professor [Emily Lines](https://www.geog.cam.ac.uk/people/lines/) (University of Cambridge), in collaboration with [Forest Research](https://www.forestresearch.gov.uk/). Funded by [Defra](https://www.gov.uk/government/organisations/department-for-environment-food-rural-affairs).
+Developed by Harry Owen (Research Associate, [Royal Holloway, University of London](https://www.royalholloway.ac.uk/)), alongside Associate Professor [Alice Milner](https://www.royalholloway.ac.uk/research-and-teaching/departments-and-schools/geography/our-people/academic-staff/dr-alice-milner/) (Royal Holloway) and Associate Professor [Emily Lines](https://www.geog.cam.ac.uk/people/lines/) (University of Cambridge), in collaboration with [Forest Research](https://www.forestresearch.gov.uk/). Funded by [Defra](https://www.gov.uk/government/organisations/department-for-environment-food-rural-affairs).
 
 ## Repository Layout
 
