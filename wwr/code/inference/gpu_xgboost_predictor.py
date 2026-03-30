@@ -286,7 +286,7 @@ def main():
     tow_root = Path(__file__).resolve().parents[2]
     default_models_dir = tow_root / "data" / "output" / "models"
     default_data_dir = tow_root / "data" / "input" / "embeddings" / "inference_embeddings"
-    default_output_dir = tow_root / "data" / "output" / "predictions" / "tiles"
+    default_output_dir = tow_root / "data" / "output" / "rasters" / "prediction_tiles"
 
     parser = argparse.ArgumentParser(description="GPU-Accelerated XGBoost Predictor")
     parser.add_argument(

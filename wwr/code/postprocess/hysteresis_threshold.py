@@ -36,8 +36,8 @@ from scipy import ndimage
 
 def parse_args() -> argparse.Namespace:
     tow_root = Path(__file__).resolve().parents[2]
-    default_input = tow_root / "data" / "output" / "predictions" / "tiles"
-    default_output = tow_root / "data" / "output" / "postprocess" / "wet_woodland_mosaic_hysteresis.tif"
+    default_input = tow_root / "data" / "output" / "rasters" / "prediction_tiles"
+    default_output = tow_root / "data" / "output" / "rasters" / "wet_woodland_extent.tif"
     p = argparse.ArgumentParser(
         description="Apply two-threshold hysteresis to a probability GeoTIFF"
     )
