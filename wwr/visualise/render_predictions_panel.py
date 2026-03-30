@@ -291,6 +291,7 @@ def draw_probability_inset(
     basemap_contrast,
     locator_anchor="right",
     cmap=None,
+    stadia_api_key=None,
 ):
     inset_data, _, inset_bounds = load_inset_raster(
         pred_path,
@@ -319,6 +320,7 @@ def draw_probability_inset(
             target_shape=basemap_shape,
             provider_name=basemap,
             zoom=basemap_zoom,
+            stadia_api_key=stadia_api_key,
         )
         if basemap_rgba is not None:
             basemap_rgba = basemap_rgba.copy()
@@ -463,7 +465,7 @@ def choose_inset_basemap_zoom(bounds_native, src_crs, target_shape):
     return int(np.clip(np.round(zoom_float), 0, 18))
 
 
-def fetch_inset_basemap(bounds_native, src_crs, target_shape, provider_name="cartodb_positron", zoom=None):
+def fetch_inset_basemap(bounds_native, src_crs, target_shape, provider_name="cartodb_positron", zoom=None, stadia_api_key=None):
     if provider_name == "none":
         return None
     provider_lookup = {
@@ -471,6 +473,9 @@ def fetch_inset_basemap(bounds_native, src_crs, target_shape, provider_name="car
         "cartodb_voyager": xyz.CartoDB.Voyager,
         "cartodb_dark_matter": xyz.CartoDB.DarkMatter,
         "osm_mapnik": xyz.OpenStreetMap.Mapnik,
+        "stamen_toner": xyz.Stadia.StamenToner,
+        "stamen_toner_lite": xyz.Stadia.StamenTonerLite,
+        "esri_gray": xyz.Esri.WorldGrayCanvas,
     }
     if provider_name not in provider_lookup:
         raise ValueError(f"Unsupported inset basemap provider: {provider_name}")
@@ -506,6 +511,8 @@ def fetch_inset_basemap(bounds_native, src_crs, target_shape, provider_name="car
     for ty in range(y_min, y_max + 1):
         for tx in range(x_min, x_max + 1):
             url = provider.build_url(x=tx, y=ty, z=zoom)
+            if stadia_api_key and "stadiamaps.com" in url:
+                url = f"{url}?api_key={stadia_api_key}"
             try:
                 resp = session.get(url, timeout=20)
                 resp.raise_for_status()
@@ -847,7 +854,7 @@ def main():
     )
     parser.add_argument(
         "--inset-basemap",
-        choices=["none", "cartodb_positron", "cartodb_voyager", "cartodb_dark_matter", "osm_mapnik"],
+        choices=["none", "cartodb_positron", "cartodb_voyager", "cartodb_dark_matter", "osm_mapnik", "stamen_toner", "stamen_toner_lite", "esri_gray"],
         default="cartodb_positron",
         help="Optional basemap underlay for the site inset. Default: cartodb_positron.",
     )
@@ -880,6 +887,11 @@ def main():
         type=float,
         default=1.0,
         help="Contrast multiplier for inset basemap RGB values. Default: 1.0.",
+    )
+    parser.add_argument(
+        "--stadia-api-key",
+        default=None,
+        help="Stadia Maps API key for stamen_toner / stamen_toner_lite basemaps.",
     )
     parser.add_argument(
         "--output",
@@ -1224,6 +1236,7 @@ def main():
             basemap_contrast=args.inset_basemap_contrast,
             locator_anchor="right",
             cmap=cmap,
+            stadia_api_key=args.stadia_api_key,
         )
     if include_left_inset:
         inset_left = max(0.015, map_pos.x0 - inset_size + 0.08)
@@ -1254,6 +1267,7 @@ def main():
             basemap_contrast=args.inset_basemap_contrast,
             locator_anchor="left",
             cmap=cmap,
+            stadia_api_key=args.stadia_api_key,
         )
     if include_bottom_right_inset:
         inset_left = min(0.985 - inset_size, map_pos.x1 + 0.045)
@@ -1284,6 +1298,7 @@ def main():
             basemap_contrast=args.inset_basemap_contrast,
             locator_anchor="right",
             cmap=cmap,
+            stadia_api_key=args.stadia_api_key,
         )
 
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=color_norm)
