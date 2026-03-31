@@ -1,35 +1,32 @@
 # Wet Woodland Runbook
 
-These are copy/paste commands for the current cleaned repo layout.
-
-All commands below assume you run from repo root:
+Copy/paste commands for the current pipeline. Run all commands from repo root:
 
 ```bash
 cd /Users/harryjfowen/Software/wet-woodland-research
 ```
 
-## 1) Pull Embeddings (rclone)
+## 1) Google Earth Engine — Input Data
 
-Training embeddings:
+Embedding tiles and terrain data are generated via [Google Earth Engine](https://earthengine.google.com/) and are too large to store in this repository. GEE scripts live in `wwr/code/gee/`. Exact Earth Engine assets used:
+
+| Asset | GEE path |
+|---|---|
+| Google Satellite Embeddings | `GOOGLE/SATELLITE_EMBEDDING/V1/ANNUAL` |
+| EA 1m LiDAR terrain (DTM/DSM) | `UK/EA/ENGLAND_1M_TERRAIN/2022` |
+| Copernicus GLO-30 DEM (gap-fill) | `COPERNICUS/DEM/GLO30` |
+| Forest compartment mask | `users/harryjfowen/compartment_duo_mask` |
+
+Run `wwr/code/gee/gee_patch.js` in the Earth Engine code editor to export embedding tiles to Google Drive, then pull locally:
 
 ```bash
 rclone copy gdrive: wwr/data/input/embeddings/training_embeddings \
   --drive-root-folder-id 1KUZKnbDjuWE6WoOFRZhjCwnZ-FJJnQO8 \
-  --drive-acknowledge-abuse \
-  --progress \
-  --transfers 4 \
-  --checkers 8
-```
+  --drive-acknowledge-abuse --progress --transfers 4 --checkers 8
 
-Inference embeddings (if stored separately):
-
-```bash
 rclone copy gdrive: wwr/data/input/embeddings/inference_embeddings \
   --drive-root-folder-id 1KUZKnbDjuWE6WoOFRZhjCwnZ-FJJnQO8 \
-  --drive-acknowledge-abuse \
-  --progress \
-  --transfers 4 \
-  --checkers 8
+  --drive-acknowledge-abuse --progress --transfers 4 --checkers 8
 ```
 
 ## 2) Build Forest Mask from TOW GDB (vector + raster for Earth Engine)
@@ -87,6 +84,7 @@ python wwr/code/model/gpu_xgboost_trainer.py \
   --optuna-samples 45000 \
   --trials 100 \
   --save-model wwr/data/output/models/wetwoodland65.json \
+  --save-oof-probe-data auto \
   --compute-shap \
   --find-threshold \
   --spatial-buffer 0 \
@@ -104,6 +102,7 @@ Defaults:
 - thresholding: policy-calibrated hysteresis seed threshold from OOF folds
 - threshold policy defaults: `q10 >= 25%` deployment precision, `min recall = 0%`
 - models: timestamped names such as `wwr/data/output/models/wetwoodland_binary20260310153045.json`
+- OOF hardness probe bundle: `wwr/data/output/models/<model_stem>.embedding_hardness_oof.npz` when `--save-oof-probe-data auto` is used
 - discarded-label cache: `wwr/data/validation/eval_background.tif`
 - reports: `wwr/data/output/reports/`
 
@@ -123,7 +122,24 @@ Defaults:
 
 If you want a specific older model, pass `--model` explicitly.
 
-## 7) Hysteresis Postprocess Mosaic
+## 7) Build Embedding Hardness / Reliability Tiles
+
+Requires the OOF probe bundle exported during training (see `--save-oof-probe-data auto`
+above). If omitted from training, rerun training once with that flag to create it.
+
+```bash
+python wwr/code/postprocess/embedding_hardness_map.py
+```
+
+Defaults:
+- OOF probe bundle: auto-detect newest `*.embedding_hardness_oof.npz` in `wwr/data/output/models/`
+- input tiles: `wwr/data/input/embeddings/inference_embeddings/`
+- outputs:
+  - hardness: `wwr/data/output/postprocess/embedding_hardness/hardness_tiles/`
+  - reliability: `wwr/data/output/postprocess/embedding_hardness/reliability_tiles/`
+  - probe/report: `wwr/data/output/postprocess/embedding_hardness/`
+
+## 8) Hysteresis Postprocess Mosaic
 
 ```bash
 python wwr/code/postprocess/hysteresis_threshold.py \
@@ -131,7 +147,7 @@ python wwr/code/postprocess/hysteresis_threshold.py \
   --output wwr/data/output/postprocess/wet_woodland_mosaic_hysteresis.tif
 ```
 
-## 8) Independent Recall from KML
+## 9) Independent Recall from KML
 
 ```bash
 python wwr/code/postprocess/recall_from_kml.py \
@@ -141,7 +157,7 @@ python wwr/code/postprocess/recall_from_kml.py \
   --erode-pixels 1
 ```
 
-## 9) Elapid Potential
+## 10) Elapid Potential
 
 ```bash
 python wwr/code/potential/maxent.py
