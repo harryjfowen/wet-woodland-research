@@ -67,7 +67,6 @@ Large inputs and generated outputs are not tracked in git. Populate `wwr/data/in
 ## Documentation
 
 - [Workflow runbook](wwr/docs/RUNBOOK.md)
-- [Suitability framework](wwr/docs/methods/WET_WOODLAND_SUITABILITY_FRAMEWORK.md)
 - [Code index](wwr/code/README.md)
 - [Data layout](wwr/data/README.md)
 
