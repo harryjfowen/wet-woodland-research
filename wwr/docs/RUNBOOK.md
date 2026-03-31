@@ -29,20 +29,24 @@ rclone copy gdrive: wwr/data/input/embeddings/inference_embeddings \
   --drive-acknowledge-abuse --progress --transfers 4 --checkers 8
 ```
 
-## 2) Build Forest Mask from TOW GDB (vector + raster for Earth Engine)
+## 2) Build Forest Mask and Wet Woodland Labels
 
-Vector mask:
+Training labels are drawn from three sources for comprehensive coverage:
+
+| Source | Link |
+|---|---|
+| Forestry England Subcompartments 2025 | [data.gov.uk](https://www.data.gov.uk/dataset/b8cb3475-f5d1-4907-b82a-13477fd6cf69/forestry-england-subcompartments2025) |
+| National Forest Inventory (NFI) parcels | [Forest Research](https://www.forestresearch.gov.uk/tools-and-resources/national-forest-inventory/) |
+| Trees Outside Woodland (TOW) map | [Forest Research](https://www.forestresearch.gov.uk/tools-and-resources/national-forest-inventory/trees-outside-woodland/) |
+
+Build the forest domain mask from the TOW GDB (vector + raster for Earth Engine export):
 
 ```bash
 python wwr/code/labels/tow_gdb_processor.py \
   --gdb-dir wwr/data/input/tow_gdb \
   --method identify \
   --output wwr/data/output/labels/forest_mask.gpkg
-```
 
-Raster mask:
-
-```bash
 python wwr/code/labels/tow_gdb_processor.py \
   --gdb-dir wwr/data/input/tow_gdb \
   --method identify \
@@ -51,7 +55,7 @@ python wwr/code/labels/tow_gdb_processor.py \
   --output wwr/data/output/labels/forest_mask.tif
 ```
 
-## 3) Build Wet Woodland Labels
+Build the merged wet woodland label raster (combines all three sources):
 
 ```bash
 python wwr/code/labels/gather_wetwoodland_labels.py
