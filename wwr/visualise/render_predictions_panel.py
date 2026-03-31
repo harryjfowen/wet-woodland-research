@@ -475,6 +475,8 @@ def fetch_inset_basemap(bounds_native, src_crs, target_shape, provider_name="car
         "osm_mapnik": xyz.OpenStreetMap.Mapnik,
         "stamen_toner": xyz.Stadia.StamenToner,
         "stamen_toner_lite": xyz.Stadia.StamenTonerLite,
+        "stamen_toner_lines": xyz.Stadia.StamenTonerLines,
+        "stamen_toner_background": xyz.Stadia.StamenTonerBackground,
         "esri_gray": xyz.Esri.WorldGrayCanvas,
     }
     if provider_name not in provider_lookup:
@@ -854,9 +856,9 @@ def main():
     )
     parser.add_argument(
         "--inset-basemap",
-        choices=["none", "cartodb_positron", "cartodb_voyager", "cartodb_dark_matter", "osm_mapnik", "stamen_toner", "stamen_toner_lite", "esri_gray"],
-        default="cartodb_positron",
-        help="Optional basemap underlay for the site inset. Default: cartodb_positron.",
+        choices=["none", "cartodb_positron", "cartodb_voyager", "cartodb_dark_matter", "osm_mapnik", "stamen_toner", "stamen_toner_lite", "stamen_toner_lines", "stamen_toner_background", "esri_gray"],
+        default="stamen_toner_lite",
+        help="Optional basemap underlay for the site inset. Default: stamen_toner_lite.",
     )
     parser.add_argument(
         "--inset-basemap-alpha",
