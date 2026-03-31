@@ -41,7 +41,7 @@ Stages run in order from `wwr/code/`:
 
 | Stage | Directory | Description |
 |---|---|---|
-| 1 | `labels/` | Build training labels from TOW GDB and habitat inputs |
+| 1 | `labels/` | Build training labels from subcompartments, NFI parcels, and TOW |
 | 2 | `preprocess/` | Build terrain and abiotic predictor layers |
 | 3 | `model/` | Train GPU XGBoost extent model |
 | 4 | `inference/` | Apply model across embedding tiles |
