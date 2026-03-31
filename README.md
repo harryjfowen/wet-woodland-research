@@ -13,6 +13,16 @@ Active codebase for mapping wet woodland extent and restoration suitability acro
 
 Developed by Harry Owen (Research Associate, [Royal Holloway, University of London](https://www.royalholloway.ac.uk/)), alongside Associate Professor [Alice Milner](https://pure.royalholloway.ac.uk/en/persons/alice-milner/) (Royal Holloway) and Associate Professor [Emily Lines](https://www.geog.cam.ac.uk/people/lines/) (University of Cambridge), in collaboration with [Forest Research](https://www.forestresearch.gov.uk/). Funded by [Defra](https://www.gov.uk/government/organisations/department-for-environment-food-rural-affairs).
 
+## Results
+
+### Extent mapping
+[XGBoost](https://xgboost.readthedocs.io/) trained on [Google Earth aerial embeddings](https://earthengine.google.com/) and [Environment Agency LiDAR](https://www.data.gov.uk/dataset/f0db0249-f17b-4036-9e65-309148c97ce4/national-lidar-programme)-derived terrain metrics. Labels from the Forestry Commission Trees Outside Woodland (TOW) forest subcompartment database — informative but limited in coverage, so outputs should be interpreted as indicative of wet woodland-associated tree cover rather than confirmed extent.
+
+10-fold spatial cross-validation yielded AUROC 0.75 ± 0.05 and precision 0.84 ± 0.04. Thresholds were tuned to preserve precision, with a held-out background validation step confirming hysteresis bounds (low = 0.40, high = 0.53) did not inflate false positives. ~**202,000 ha** of wet woodland-associated tree cover identified across England (1.5% of land area), distributed across 674,763 discrete patches (median 0.08 ha).
+
+### Habitat suitability
+[MaxEnt via Elapid](https://github.com/earth-chris/elapid), 9 environmental predictors (elevation, slope, aspect, topographic wetness, soil moisture, peat depth, distance to water). Spatial CV AUC 0.73 ± 0.13. At the recommended restoration threshold (10th percentile training presence), **63% of peat-underlain** forest pixels and **38% of off-peat** pixels are classified as suitable for wet woodland establishment or restoration.
+
 ## Repository Layout
 
 ```text
