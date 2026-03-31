@@ -892,8 +892,8 @@ def main():
     )
     parser.add_argument(
         "--stadia-api-key",
-        default=None,
-        help="Stadia Maps API key for stamen_toner / stamen_toner_lite basemaps.",
+        default=os.environ.get("STADIA_API_KEY"),
+        help="Stadia Maps API key for stamen_toner / stamen_toner_lite basemaps. Defaults to $STADIA_API_KEY env var.",
     )
     parser.add_argument(
         "--output",
